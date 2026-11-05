@@ -81,7 +81,10 @@ const styleOf = (a) => {
 // The usage feed's service workspace (~/.config/cmux/usage-feed.sh writes
 // "cmux-usage:<json>" into its description) is hidden and only feeds the footer.
 const FEED_MARK = "cmux-usage:";
-const isFeed = (w) => String(w.description ?? "").startsWith(FEED_MARK);
+const FEED_TITLE = "⏱ limits";
+// Every cmux window has its own carrier workspace (usage-feed.sh creates them).
+// Matched by title too, so a new carrier is hidden before its first update.
+const isFeed = (w) => String(w.description ?? "").startsWith(FEED_MARK) || w.title === FEED_TITLE;
 const allWs = () => data.workspaces() ?? [];               // cmux's full order
 const wsList = () => allWs().filter((w) => !isFeed(w));   // what the list shows
 const wsById = (id) => allWs().find((w) => w.id === id);
@@ -609,7 +612,7 @@ let lastRestartAt = 0;
 function usagePanel() {
   return VStack({ spacing: 3 }, [
     Text(() => {
-      if (!feedWs()) return "limits feed is not set up";
+      if (!feedWs()) return "limits not connected in this window · click to connect";
       if (isStale()) return "limits outdated · click to restart";
       const u = usage();
       const ago = Math.max(0, Math.round((nowS() - u.at) / 60));
@@ -624,14 +627,27 @@ function usagePanel() {
     .frame({ maxWidth: "infinity" })
     .paddingHorizontal(6).paddingVertical(4)
     .onTap(() => {
-      // Restart the feed loop in its terminal, only when it has gone quiet
-      // (typing into a live loop would just queue up in its stdin).
-      const sf = feedWs()?.tabs?.[0]?.surfaceId;
-      if (!sf || !isStale() || Date.now() - lastRestartAt < 60000) return;
+      // Only when the numbers are missing or old: typing into a terminal whose
+      // loop is alive would just queue up in its stdin.
+      if (!isStale() || Date.now() - lastRestartAt < 60000) return;
       lastRestartAt = Date.now();
-      cmux("surface.send_text", { surface_id: sf, text: FEED_CMD });
+      setFeedStart(true);
+      // No carrier in this window yet: create one; the command goes to its
+      // terminal as soon as it shows up in the data (startFeedWhenReady).
+      if (!feedWs()) cmux("workspace.create", { title: FEED_TITLE, focus: false });
     });
 }
+
+// Starts usage-feed.sh in this window's carrier terminal. If a loop already
+// runs (in any window) the script does one update for every window and exits.
+const [feedStart, setFeedStart] = signal(false);
+const startFeedWhenReady = computed(() => {
+  if (!feedStart()) return;
+  const sf = feedWs()?.tabs?.[0]?.surfaceId;
+  if (!sf) return;
+  setFeedStart(false);
+  cmux("surface.send_text", { surface_id: sf, text: FEED_CMD });
+});
 
 
 // --- root --------------------------------------------------------------------

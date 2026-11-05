@@ -53,9 +53,14 @@ only admits processes started by cmux. So the installer creates a service
 workspace, **⏱ limits**, whose terminal runs `~/.config/cmux/usage-feed.sh`. The
 script refreshes the limits every 5 minutes (`USAGE_INTERVAL` to change) and
 stores them in that workspace's description. The sidebar hides this workspace
-and draws the numbers on top. After restarting cmux the loop isn't running; when
-the data is older than 15 minutes the panel turns yellow, and a click on it
-restarts the feed.
+and draws the numbers on top.
+
+Every cmux window has its own workspace list, so each window gets its own hidden
+**⏱ limits** workspace: the feed adds one to new windows on its next update, or
+click the panel ("click to connect") to connect a window right away. Only one
+feed loop runs at a time. After restarting cmux the loop isn't running; when the
+data is older than 15 minutes the panel turns yellow, and a click on it restarts
+the feed.
 
 ### Update / uninstall
 
