@@ -4,6 +4,10 @@ A custom left sidebar for [cmux](https://cmux.com) that shows every workspace
 together with the tabs running inside it, tinted in the workspace's color, with
 an optional Claude / Codex usage-limits panel on top.
 
+<img src="assets/sidebar.png" alt="cmux sidebar with Claude and Codex usage meters, colored api, web and docs workspaces, and their tabs" width="230">
+
+*Usage figures shown are demo values.*
+
 - **Workspaces → tabs tree.** Each tab shows what runs in it: an orange
   asterisk for Claude, a hexagon for Codex (Gemini and OpenCode too), or a
   terminal icon.
